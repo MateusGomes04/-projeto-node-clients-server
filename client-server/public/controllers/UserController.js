@@ -1,6 +1,6 @@
 class UserController {
 
-    constructor(formIdCreate, formIdUpdate, tableId){
+    constructor(formIdCreate, formIdUpdate, tableId) {
 
         this.formEl = document.getElementById(formIdCreate);
         this.formUpdateEl = document.getElementById(formIdUpdate);
@@ -12,9 +12,9 @@ class UserController {
 
     }
 
-    onEdit(){
+    onEdit() {
 
-        document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e=>{
+        document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e => {
 
             this.showPanelCreate();
 
@@ -50,18 +50,19 @@ class UserController {
                     let user = new User();
 
                     user.loadFromJSON(result);
+                    user.save().then(user => {
 
-                    user.save();
+                        this.getTr(user, tr);
 
-                    this.getTr(user, tr);
+                        this.updateCount();
 
-                    this.updateCount();
+                        this.formUpdateEl.reset();
 
-                    this.formUpdateEl.reset();
+                        btn.disabled = false;
 
-                    btn.disabled = false;
+                        this.showPanelCreate();
 
-                    this.showPanelCreate();
+                    });
 
                 },
                 (e) => {
@@ -73,7 +74,7 @@ class UserController {
 
     }
 
-    onSubmit(){
+    onSubmit() {
 
         this.formEl.addEventListener("submit", event => {
 
@@ -89,18 +90,21 @@ class UserController {
 
             this.getPhoto(this.formEl).then(
                 (content) => {
-                    
+
                     values.photo = content;
 
-                    values.save();
+                    values.save().then(user => {
 
-                    this.addLine(values);
+                        this.addLine(user);
 
-                    this.formEl.reset();
+                        this.formEl.reset();
 
-                    btn.disabled = false;
+                        btn.disabled = false;
 
-                }, 
+
+                    });
+
+                },
                 (e) => {
                     console.error(e);
                 }
@@ -110,9 +114,9 @@ class UserController {
 
     }
 
-    getPhoto(formEl){
+    getPhoto(formEl) {
 
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
 
             let fileReader = new FileReader();
 
@@ -132,7 +136,7 @@ class UserController {
 
             };
 
-            fileReader.onerror = (e)=>{
+            fileReader.onerror = (e) => {
 
                 reject(e);
 
@@ -148,7 +152,7 @@ class UserController {
 
     }
 
-    getValues(formEl){
+    getValues(formEl) {
 
         let user = {};
         let isValid = true;
@@ -168,7 +172,7 @@ class UserController {
                     user[field.name] = field.value;
                 }
 
-            } else if(field.name == "admin") {
+            } else if (field.name == "admin") {
 
                 user[field.name] = field.checked;
 
@@ -197,7 +201,7 @@ class UserController {
 
     }
 
-    selectAll(){
+    selectAll() {
 
         HttpRequest.get('/users').then(data => {
 
@@ -225,7 +229,7 @@ class UserController {
 
     }
 
-    getTr(dataUser, tr = null){
+    getTr(dataUser, tr = null) {
 
         if (tr === null) tr = document.createElement('tr');
 
@@ -249,7 +253,7 @@ class UserController {
 
     }
 
-    addEventsTr(tr){
+    addEventsTr(tr) {
 
         tr.querySelector(".btn-delete").addEventListener("click", e => {
 
@@ -259,11 +263,13 @@ class UserController {
 
                 user.loadFromJSON(JSON.parse(tr.dataset.user));
 
-                user.remove();
+                user.remove().then(data => {
 
-                tr.remove();
+                    tr.remove();
 
-                this.updateCount();
+                    this.updateCount();
+
+                });
 
             }
 
@@ -313,7 +319,7 @@ class UserController {
 
     }
 
-    showPanelCreate(){
+    showPanelCreate() {
 
         document.querySelector("#box-user-create").style.display = "block";
         document.querySelector("#box-user-update").style.display = "none";
@@ -327,19 +333,19 @@ class UserController {
 
     }
 
-    updateCount(){
+    updateCount() {
 
         let numberUsers = 0;
         let numberAdmin = 0;
 
-        [...this.tableEl.children].forEach(tr=>{
+        [...this.tableEl.children].forEach(tr => {
 
             numberUsers++;
-            
+
             let user = JSON.parse(tr.dataset.user);
 
             if (user._admin) numberAdmin++;
-            
+
         });
 
         document.querySelector("#number-users").innerHTML = numberUsers;
